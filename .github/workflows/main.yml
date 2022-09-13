@@ -15,7 +15,7 @@ jobs:
     - name: PerfAction for JMeter
       uses: QAInsights/PerfAction@v3.1
       with:
-    # jmeter test plan to execute
+    # jmeter test plan to execute jmx
          test-plan-path: jmeter.jmx
           
     - name: Upload Results
