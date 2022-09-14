@@ -4,21 +4,27 @@ jobs:
     runs-on: ubuntu-latest
     name: JMeter Test Execution
     steps:      
-      - name: Send mail
-        if: always()
-        uses: dawidd6/action-send-mail@v2
+      - name: Checkout
+        uses: actions/checkout@v2
+        
+      - name: Run JMeter Tests
+        uses: QAInsights/PerfAction@v3.1
         with:
-          # mail server settings
-          server_address: smtp.gmail.com
-          server_port: 465
-          # user credentials
-          username: ${{ secrets.MAIL_USERNAME }}
-          password: ${{ secrets.MAIL_PASSWORD }}
-          # email subject
-          subject: ${{ github.job }} job of ${{ github.repository }} has ${{ job.status }}
-          # email body as text
-          body: ${{ github.job }} job in worflow ${{ github.workflow }} of ${{ github.repository }} has ${{ job.status }}
-          # comma-separated string, send email to
-          to: akshayvm97@gmail.com
-          # from email name
-          from: John Doe
+          test-plan-path: jmeter.jmx
+          args: ""
+          
+      - name: Upload Results
+        uses: actions/upload-artifact@v2
+        with:
+          name: jmeter-results
+          path: result.jtl
+          
+      - name: toggle workflow command echoing
+        run: |
+          ls -lrt
+          echo '::set-output name=action_echo::disabled'
+          echo '::echo::on'
+          echo '::set-output name=action_echo::enabled'
+          echo '::echo::off'
+          echo '::set-output name=action_echo::disabled'
+        
