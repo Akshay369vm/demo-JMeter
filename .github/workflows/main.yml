@@ -22,6 +22,7 @@ jobs:
       - name: toggle workflow command echoing
         run: |
           ls -lrt
+          jmeter -n -t jmeter.jmx -l jmeter.csv -e -o output
           echo '::set-output name=action_echo::disabled'
           echo '::echo::on'
           echo '::set-output name=action_echo::enabled'
