@@ -1,31 +1,54 @@
-on: [push]
+name: Test JMeter Action
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches: [main]
+
 jobs:
-  jmeter_job:
+  build:
     runs-on: ubuntu-latest
-    name: JMeter Test Execution
-    steps:      
-      - name: Checkout
-        uses: actions/checkout@v2
-        
-      - name: Run JMeter Tests
-        uses: QAInsights/PerfAction@v3.1
-        with:
-          test-plan-path: jmeter.jmx
-          args: ""
+     #environment: Production
+    env:
+      SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+      
+    steps:
+    - name: checkout repo
+      uses: actions/checkout@v3
+      with:
+       ref: main 
+    - name: Run JMeter Action on a test
+      uses: rbhadti94/apache-jmeter-action@v0.5.0
+      with:
+          testFilePath: jmeter.jmx
+          outputReportsFolder: reports/
+          args: "--loglevel INFO"
           
-      - name: Upload Results
-        uses: actions/upload-artifact@v2
-        with:
-          name: jmeter-results
-          path: result.jtl
+    - name: PerfAction for JMeter
+      uses: QAInsights/PerfAction@v3.1
+      with:
+    # jmeter test plan to execute
+         test-plan-path: jmeter.jmx
           
-      - name: toggle workflow command echoing
-        run: |
-          ls -lrt
-          jmeter -n -t jmeter.jmx -l jmeter.csv -e -o output
-          echo '::set-output name=action_echo::disabled'
-          echo '::echo::on'
-          echo '::set-output name=action_echo::enabled'
-          echo '::echo::off'
-          echo '::set-output name=action_echo::disabled'
-        
+    - uses: actions/upload-artifact@v1
+      with:
+         name: jmeter-test-results
+         path: reports/
+         
+    - name: Upload Results
+      uses: actions/upload-artifact@v2
+      with:
+         name: jmeter-results-jtl
+         path: jmeter.jtl  
+         
+    - name: Slack Notification
+      uses: act10ns/slack@v1
+      with: 
+        status: ${{ job.status }}
+        steps: ${{ toJson(steps) }}
+        channel: '#jmeter'
+        config: .github/config/slack.yaml
+        message: jmeter execution Finished...
+      if: always()
